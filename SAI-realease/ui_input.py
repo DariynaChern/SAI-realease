@@ -18,8 +18,10 @@ class InputWindow(QWidget):
         self.form = QFormLayout()
         self.widgets = {}
 
-        # создаём виджеты для каждого признака
-        for feature, info in self.kb.features.items():
+        # создаём виджеты строго в порядке признаков KB
+        for feature in self.kb.features.keys():
+            info = self.kb.features[feature]
+
             if info["type"] in ("binary", "categorical"):
                 w = QComboBox()
                 w.addItems(info["possible"])
@@ -34,7 +36,7 @@ class InputWindow(QWidget):
                 w = QSpinBox()
                 w.setRange(min(info["possible"]), max(info["possible"]))
 
-                # установить нормальное значение
+                # ставим нижнюю границу нормального диапазона
                 normal_value = info["normal"][0]
                 w.setValue(normal_value)
 
@@ -55,8 +57,10 @@ class InputWindow(QWidget):
     def process(self):
         instance = {}
 
-        # собираем значения признаков
-        for feature, widget in self.widgets.items():
+        # собираем значения признаков строго в порядке KB
+        for feature in self.kb.features.keys():
+            widget = self.widgets[feature]
+
             if isinstance(widget, QComboBox):
                 instance[feature] = widget.currentText()
             else:

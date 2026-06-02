@@ -1,7 +1,9 @@
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QListWidget, QListWidgetItem,
-    QPushButton, QLabel, QMessageBox
+    QPushButton, QLabel
 )
+from PyQt5.QtGui import QColor
+from PyQt5.QtCore import Qt, QTimer
 from knowledge_base import KnowledgeBase
 
 
@@ -18,6 +20,11 @@ class DiagnosisValuesTab(QWidget):
 
         self.btn_save = QPushButton("Сохранить значения")
 
+        # --- метка для уведомлений ---
+        self.status_label = QLabel("")
+        self.status_label.setStyleSheet("color: green; font-weight: bold;")
+        self.status_label.hide()
+
         # --- наполняем список диагнозов ---
         self.refresh_diagnoses()
 
@@ -31,6 +38,7 @@ class DiagnosisValuesTab(QWidget):
         main.addWidget(QLabel("Выберите диагноз → признак → значения"))
         main.addLayout(layout)
         main.addWidget(self.btn_save)
+        main.addWidget(self.status_label)
 
         self.setLayout(main)
 
@@ -64,9 +72,6 @@ class DiagnosisValuesTab(QWidget):
 
         self.values_list.clear()
 
-    # -----------------------------
-    # Загрузка возможных значений выбранного признака
-    # -----------------------------
     def load_values(self):
         diag_item = self.diag_list.currentItem()
         feat_item = self.feat_list.currentItem()
@@ -83,29 +88,92 @@ class DiagnosisValuesTab(QWidget):
         self.values_list.clear()
         for val in possible:
             item = QListWidgetItem(str(val))
-            item.setSelected(val in selected)
+            item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
+
+            # ВАЖНО: правильная установка чекбокса
+            if val in selected:
+                item.setCheckState(Qt.Checked)
+            else:
+                item.setCheckState(Qt.Unchecked)
+
             self.values_list.addItem(item)
 
     # -----------------------------
-    # Сохранение значений признака для диагноза
+    # Сохранение значений
     # -----------------------------
     def save_values(self):
-        diag_item = self.diag_list.currentItem()
-        feat_item = self.feat_list.currentItem()
+        try:
+            diag_item = self.diag_list.currentItem()
+            feat_item = self.feat_list.currentItem()
 
-        if not diag_item or not feat_item:
-            QMessageBox.warning(self, "Ошибка", "Выберите диагноз и признак.")
-            return
+            if not diag_item or not feat_item:
+                return
 
-        diag = diag_item.text()
-        feat = feat_item.text()
+            diag = diag_item.text()
+            feat = feat_item.text()
 
-        selected_values = [i.text() for i in self.values_list.selectedItems()]
+            selected = []
+            for i in range(self.values_list.count()):
+                item = self.values_list.item(i)
+                if item and item.checkState() == Qt.Checked:
+                    selected.append(item.text())
 
-        # integer → преобразуем в числа
-        if self.kb.get_feature_type(feat) == "integer":
-            selected_values = list(map(int, selected_values))
+            # создаём values, если его нет
+            if feat not in self.kb.diagnoses[diag]["values"]:
+                self.kb.diagnoses[diag]["values"][feat] = []
 
-        self.kb.set_diag_value(diag, feat, selected_values)
+            self.kb.diagnoses[diag]["values"][feat] = selected
+            self.kb.save()
 
-        QMessageBox.information(self, "Готово", "Значения признака сохранены.")
+            # --- показываем уведомление ---
+            self.status_label.setText("Сохранено")
+            self.status_label.show()
+
+            QTimer.singleShot(5000, self.status_label.hide)
+
+        except RuntimeError:
+            pass
+
+    # -----------------------------
+    # Подсветка ошибок
+    # -----------------------------
+    def highlight_diagnosis(self, diag_name):
+        try:
+            for i in range(self.diag_list.count()):
+                item = self.diag_list.item(i)
+                if item and item.text() == diag_name:
+                    item.setBackground(QColor("red"))
+                    item.setForeground(QColor("white"))
+        except RuntimeError:
+            pass
+
+    def highlight_feature(self, feat_name):
+        try:
+            for i in range(self.feat_list.count()):
+                item = self.feat_list.item(i)
+                if item and item.text() == feat_name:
+                    item.setBackground(QColor("red"))
+                    item.setForeground(QColor("white"))
+        except RuntimeError:
+            pass
+
+    def highlight_value(self, value_text):
+        try:
+            for i in range(self.values_list.count()):
+                item = self.values_list.item(i)
+                if item and item.text() == value_text:
+                    item.setBackground(QColor("red"))
+                    item.setForeground(QColor("white"))
+        except RuntimeError:
+            pass
+
+    def clear_highlight(self):
+        try:
+            for lst in (self.diag_list, self.feat_list, self.values_list):
+                for i in range(lst.count()):
+                    item = lst.item(i)
+                    if item:
+                        item.setBackground(QColor("white"))
+                        item.setForeground(QColor("black"))
+        except RuntimeError:
+            pass

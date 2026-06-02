@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout,
     QListWidget, QPushButton, QLineEdit, QMessageBox
 )
+from PyQt5.QtGui import QColor
 from knowledge_base import KnowledgeBase
 
 
@@ -36,17 +37,11 @@ class DiagnosesTab(QWidget):
         self.btn_add.clicked.connect(self.add_diag)
         self.btn_delete.clicked.connect(self.delete_diag)
 
-    # -----------------------------
-    # Обновление списка диагнозов
-    # -----------------------------
     def refresh_list(self):
         self.list.clear()
         for diag in self.kb.get_diagnoses():
             self.list.addItem(diag)
 
-    # -----------------------------
-    # Добавление диагноза
-    # -----------------------------
     def add_diag(self):
         name = self.input.text().strip()
         if not name:
@@ -78,3 +73,16 @@ class DiagnosesTab(QWidget):
 
         self.kb.remove_diagnosis(name)
         self.refresh_list()
+
+    def highlight_diagnosis(self, name):
+        for i in range(self.list.count()):
+            item = self.list.item(i)
+            if item.text() == name:
+                item.setBackground(QColor("red"))
+                item.setForeground(QColor("white"))
+
+    def clear_highlight(self):
+        for i in range(self.list.count()):
+            item = self.list.item(i)
+            item.setBackground(QColor("white"))
+            item.setForeground(QColor("black"))

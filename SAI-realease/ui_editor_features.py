@@ -45,7 +45,8 @@ class FeaturesTab(QWidget):
         layout.addWidget(QLabel("Возможные значения (через запятую):"))
         layout.addWidget(self.possible_edit)
 
-        layout.addWidget(QLabel("Нормальные значения (через запятую):"))
+        # 🔥 Исправленная надпись
+        layout.addWidget(QLabel("Нормальные значения (укажите диапазон [min, max] через запятую):"))
         layout.addWidget(self.normal_edit)
 
         layout.addWidget(self.btn_save)

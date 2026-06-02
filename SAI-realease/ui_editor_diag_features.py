@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QListWidget, QListWidgetItem,
     QPushButton, QLabel, QMessageBox
 )
+from PyQt5.QtGui import QColor
 from knowledge_base import KnowledgeBase
 
 
@@ -80,3 +81,37 @@ class DiagnosisFeaturesTab(QWidget):
         self.kb.set_diag_features(diag, selected)
 
         QMessageBox.information(self, "Готово", "Описание признаков диагноза сохранено.")
+
+    # -----------------------------
+    # Подсветка ошибок
+    # -----------------------------
+    def highlight_diagnosis(self, diag_name):
+        try:
+            for i in range(self.diag_list.count()):
+                item = self.diag_list.item(i)
+                if item and item.text() == diag_name:
+                    item.setBackground(QColor("red"))
+                    item.setForeground(QColor("white"))
+        except RuntimeError:
+            pass
+
+    def highlight_feature(self, feat_name):
+        try:
+            for i in range(self.feat_list.count()):
+                item = self.feat_list.item(i)
+                if item and item.text() == feat_name:
+                    item.setBackground(QColor("red"))
+                    item.setForeground(QColor("white"))
+        except RuntimeError:
+            pass
+
+    def clear_highlight(self):
+        try:
+            for lst in (self.diag_list, self.feat_list):
+                for i in range(lst.count()):
+                    item = lst.item(i)
+                    if item:
+                        item.setBackground(QColor("white"))
+                        item.setForeground(QColor("black"))
+        except RuntimeError:
+            pass

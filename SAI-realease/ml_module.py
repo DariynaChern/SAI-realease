@@ -94,8 +94,22 @@ class MLModule:
     # ---------------------------------------------------------
     def load(self):
         try:
-            self.model = joblib.load(self.model_path)
-        except:
+            model = joblib.load(self.model_path)
+
+            # --- Проверяем совместимость модели с текущей базой знаний ---
+            # Модель хранит количество признаков в деревьях
+            n_features_model = model.n_features_in_
+            n_features_kb = len(self.kb.features)
+
+            if n_features_model != n_features_kb:
+                print("⚠ Обнаружено изменение структуры признаков. Переобучение модели...")
+                self.train()
+            else:
+                self.model = model
+
+        except Exception:
+            # если файл отсутствует или повреждён — обучаем заново
+            print("⚠ Модель отсутствует или повреждена. Обучение новой модели...")
             self.train()
 
     # ---------------------------------------------------------
