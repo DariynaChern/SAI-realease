@@ -35,13 +35,13 @@ class OutputWindow(QWidget):
         lines = []
 
         if self.suitable:
-            lines.append(f"Подходящий диагноз: «{self.suitable[0]}».\n")
+            lines.append(f"Подходящий диагноз: «{self.suitable[0]}».\n\n")
         else:
-            lines.append("Диагноз не определён.\n")
+            lines.append("Диагноз не определён.\n\n")
 
         for diag, reasons in self.explanations.items():
             for r in reasons:
-                lines.append(f"Диагноз «{diag}» исключён, так как {r}.\n")
+                lines.append(f"Диагноз «{diag}» исключён, так как {r}.\n\n")
 
         return "".join(lines)
 
